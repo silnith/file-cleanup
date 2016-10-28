@@ -88,6 +88,10 @@ public class CheckFileSetWorker extends SwingWorker<Collection<Set<Path>>, JProg
             
         });
         while ( !fileSetCopy.isEmpty()) {
+            if (Thread.interrupted()) {
+                return null;
+            }
+            
             final Set<Path> identicalFiles = new HashSet<>();
             
             final Iterator<Path> iterator = fileSetCopy.iterator();
@@ -129,6 +133,9 @@ public class CheckFileSetWorker extends SwingWorker<Collection<Set<Path>>, JProg
     protected void done() {
         try {
             final Collection<Set<Path>> identicalFileSets = get();
+            if (identicalFileSets == null) {
+                return;
+            }
             for (final Set<Path> identicalFiles : identicalFileSets) {
                 final JPanel identicalPanel = new JPanel(new GridLayout(0, 1));
                 identicalPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));

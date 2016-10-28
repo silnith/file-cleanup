@@ -24,11 +24,14 @@ public class SelectFileSizeListener implements ListSelectionListener {
     
     private final Map<Long, Set<Path>> fileSizeToPathsMap;
     
+    private transient Thread thread;
+    
     public SelectFileSizeListener(final Map<Long, Set<Path>> fileSizeToPathsMap, final JList<Long> displayList,
             final JPanel displayPanel) {
         this.fileSizeToPathsMap = fileSizeToPathsMap;
         this.displayList = displayList;
         this.displayPanel = displayPanel;
+        this.thread = null;
     }
     
     @Override
@@ -38,6 +41,12 @@ public class SelectFileSizeListener implements ListSelectionListener {
         if (e.getValueIsAdjusting()) {
             return;
         }
+        
+        if (thread != null) {
+            thread.interrupt();
+        }
+        thread = null;
+        
         final JPanel choicePanel = new JPanel();
         final JPanel progressPanel = new JPanel(new GridLayout(0, 1));
         
@@ -55,7 +64,8 @@ public class SelectFileSizeListener implements ListSelectionListener {
         
         final SwingWorker<Collection<Set<Path>>, ?> worker =
                 new CheckFileSetWorker(fileSizeToPathsMap, fileSize, displayList, choicePanel, progressPanel);
-        worker.execute();
+        thread = new Thread(worker, "WorkerThread-" + fileSize);
+        thread.start();
     }
     
 }
